@@ -1,5 +1,10 @@
 using graduated_project.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace graduated_project.Services
 {
@@ -10,16 +15,26 @@ namespace graduated_project.Services
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<AppUser>>();
 
-            var roleName = "super admin";
-
-            if (!await roleManager.RoleExistsAsync(roleName))
+            // Ensure the basic roles exist
+            var roles = new[] { "super admin", "admin", "user" };
+            foreach (var roleName in roles)
             {
-                await roleManager.CreateAsync(new IdentityRole(roleName));
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
             }
 
             var email = config["SuperAdmin:Email"];
             var password = config["SuperAdmin:Password"];
             var username = config["SuperAdmin:Username"];
+
+            // If required config is missing, don't attempt to create the super admin
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                return;
+            }
+
             var firstName = config["SuperAdmin:FirstName"];
             var lastName = config["SuperAdmin:LastName"];
             var address = config["SuperAdmin:Address"];
@@ -44,15 +59,13 @@ namespace graduated_project.Services
 
                 if (!result.Succeeded)
                 {
-                    throw new Exception(
-                        string.Join(" | ", result.Errors.Select(e => e.Description))
-                    );
+                    throw new Exception(string.Join(" | ", result.Errors.Select(e => e.Description)));
                 }
             }
 
-            if (!await userManager.IsInRoleAsync(user, roleName))
+            if (!await userManager.IsInRoleAsync(user, "super admin"))
             {
-                await userManager.AddToRoleAsync(user, roleName);
+                await userManager.AddToRoleAsync(user, "super admin");
             }
         }
     }

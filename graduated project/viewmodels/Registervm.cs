@@ -10,7 +10,6 @@ namespace graduated_project.viewmodels
     {
 
         [Required(ErrorMessage = "the username is required")]
-        [StringLength(20)]
         public string? username { get; set; }
         [Required(ErrorMessage = "the password is required")]
         [DataType(DataType.Password)]

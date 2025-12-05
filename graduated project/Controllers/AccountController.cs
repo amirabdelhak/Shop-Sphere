@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using graduated_project.Models;
 using graduated_project.viewmodels;
-using Azure.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 
@@ -12,6 +11,7 @@ namespace graduated_project.Controllers
     {
         private readonly SignInManager<AppUser> signInManager;
         private readonly UserManager<AppUser> userManager;
+
         public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
         {
             this.signInManager = signInManager;
@@ -25,18 +25,23 @@ namespace graduated_project.Controllers
         [AutoValidateAntiforgeryToken]
         public async Task<IActionResult> Register(Registervm appuser)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(appuser);
+
+            try
             {
                 AppUser user = new AppUser();
                 user.UserName = appuser.username;
                 user.FirstName = appuser.FirstName;
                 user.LastName = appuser.LastName;
-                user.PasswordHash = appuser.password;
                 user.Address = appuser.Address;
+
                 var register = await userManager.CreateAsync(user, appuser.password);
                 if (register.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user,"user");
+                    var addRoleResult = await userManager.AddToRoleAsync(user, "user");
+                    // continue to sign in even if role assignment failed
+
                     await signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
@@ -44,9 +49,13 @@ namespace graduated_project.Controllers
                 {
                     foreach (var item in register.Errors)
                     {
-                        ModelState.AddModelError("", item.Description);
+                        ModelState.AddModelError(string.Empty, item.Description);
                     }
                 }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
             }
 
             return View(appuser);
@@ -98,18 +107,21 @@ namespace graduated_project.Controllers
         [AutoValidateAntiforgeryToken]
         public async Task<IActionResult> adminRegister(Registervm appuser)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(appuser);
+
+            try
             {
                 AppUser user = new AppUser();
                 user.UserName = appuser.username;
                 user.FirstName = appuser.FirstName;
                 user.LastName = appuser.LastName;
-                user.PasswordHash = appuser.password;
                 user.Address = appuser.Address;
-                var register = await userManager.CreateAsync(user, user.PasswordHash);
+                var register = await userManager.CreateAsync(user, appuser.password);
                 if (register.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, "admin");
+                    var addRoleResult = await userManager.AddToRoleAsync(user, "admin");
+
                     await signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("getproducts", "Products");
                 }
@@ -120,6 +132,10 @@ namespace graduated_project.Controllers
                         ModelState.AddModelError("", item.Description);
                     }
                 }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
             }
 
             return View(appuser);
@@ -136,18 +152,21 @@ namespace graduated_project.Controllers
         [AutoValidateAntiforgeryToken]
         public async Task<IActionResult> superadminRegister(Registervm appuser)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(appuser);
+
+            try
             {
                 AppUser user = new AppUser();
                 user.UserName = appuser.username;
                 user.FirstName = appuser.FirstName;
                 user.LastName = appuser.LastName;
-                user.PasswordHash = appuser.password;
                 user.Address = appuser.Address;
-                var register = await userManager.CreateAsync(user, user.PasswordHash);
+                var register = await userManager.CreateAsync(user, appuser.password);
                 if (register.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, "super admin");
+                    var addRoleResult = await userManager.AddToRoleAsync(user, "super admin");
+
                     await signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("getproducts", "Products");
                 }
@@ -159,11 +178,13 @@ namespace graduated_project.Controllers
                     }
                 }
             }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
+            }
 
             return View(appuser);
         }
-        
-        
 
     }
 }

@@ -3,7 +3,6 @@ using graduated_project.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32.SafeHandles;
-using Microsoft.Extensions.Logging;
 using System;
 
 namespace graduated_project
@@ -30,59 +29,59 @@ namespace graduated_project
             builder.Services.AddControllersWithViews();
             var connectionString = builder.Configuration.GetConnectionString("DBConnection");
             builder.Services.AddDbContext<ShopSpheredbcontext>(options => options.UseSqlServer(connectionString) );
+
+            // Configure Identity but do not relax password rules.
+            builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+            {
+                // Allow space and common symbols in usernames
+                options.User.AllowedUserNameCharacters =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
+
+                // Keep password rules unchanged
+            })
+            .AddEntityFrameworkStores<ShopSpheredbcontext>();
+
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IAppUserProductRepository, AppUserProductRepository>();
-            builder.Services.AddIdentity<AppUser,IdentityRole>().AddEntityFrameworkStores<ShopSpheredbcontext>();
 
             var app = builder.Build();
 
-            // Log some startup information to help diagnose hosting issues
-            var logger = app.Services.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Starting application. Environment: {env}. Listening URLs: {urls}", app.Environment.EnvironmentName, urlsEnv ?? "http://0.0.0.0:5000");
-
-            // تطبيق المايجريشن وإنشاء Super Admin
-            using (var scope = app.Services.CreateScope())
+            // Run seed initializer (create roles and super admin) using a scoped provider
+            try
             {
-                try
+                using (var scope = app.Services.CreateScope())
                 {
                     var services = scope.ServiceProvider;
                     var config = services.GetRequiredService<IConfiguration>();
-                    var context = services.GetRequiredService<ShopSpheredbcontext>();
 
-                    DbInitializer.SeedSuperAdminAsync(services, config)
-                                 .GetAwaiter()
-                                 .GetResult();
-
-                    logger.LogInformation("Database initialization completed successfully.");
+                    // Call the seed method (synchronous wait)
+                    DbInitializer.SeedSuperAdminAsync(services, config).GetAwaiter().GetResult();
                 }
-                catch (Exception ex)
-                {
-                    // Log the error without stopping the application
-                    logger.LogError(ex, "Database initialization error");
-                    Console.WriteLine($"⚠️ Database Error: {ex.Message}");
-                    Console.WriteLine($"⚠️ Stack Trace: {ex.StackTrace}");
-                    Console.WriteLine("🔄 التطبيق سيعمل بدون قاعدة بيانات...");
-                }
+            }
+            catch (Exception ex)
+            {
+                // Keep output minimal per request
+                Console.WriteLine($"Seed error: {ex.Message}");
             }
 
             // Configure the HTTP request pipeline.
             var useHttpsRedirection = builder.Configuration.GetValue<bool?>("UseHttpsRedirection") ?? true;
 
-            if (!app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment())
+            {
+                // Enable developer exception page to see detailed errors during local debugging
+                app.UseDeveloperExceptionPage();
+            }
+            else
             {
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
                 if (useHttpsRedirection)
                 {
-                    logger.LogInformation("UseHttpsRedirection is enabled.");
                     app.UseHttpsRedirection();
-                }
-                else
-                {
-                    logger.LogInformation("UseHttpsRedirection is disabled by configuration.");
                 }
             }
 
