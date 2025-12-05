@@ -11,7 +11,6 @@ namespace graduated_project.metadatamodels
         [StringLength(100, ErrorMessage = "The product name cannot exceed 100 characters.")]
 
         public string? Name { get; set; }
-        //[Required(ErrorMessage = "Description is required.")]
         [StringLength(500, ErrorMessage = "The description cannot exceed 500 characters.")]
         public string? Description { get; set; }
         public int? Quantity { get; set; }
@@ -21,6 +20,7 @@ namespace graduated_project.metadatamodels
         [Required(ErrorMessage ="please enter your image")]
         public IFormFile? Image { get; set; }
         public string? ImageName { get; set; }
+        [Range(0, 100, ErrorMessage = "The discount must be between 0 and 100.")]
         public decimal? Discount { get; set; }
         [Required(ErrorMessage = "the product price is required")]
         [Range(0.01, 100000, ErrorMessage = ("The price must be between 0.01 and 100,000."))]
