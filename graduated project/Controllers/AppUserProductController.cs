@@ -58,6 +58,7 @@ namespace graduated_project.Controllers
 
             return View(appUserProduct);
         }
+        [Authorize(Roles = "admin,super admin")]
         public IActionResult Delete(string appUserId, int productId)
         {
 

@@ -46,7 +46,7 @@ namespace graduated_project.Services
         {
             var AUP = GetByIds(appUserId, productId);
             context.AppUserProducts.Remove(AUP);
-            context.SaveChangesAsync();
+            context.SaveChanges();
         }
     }
 }

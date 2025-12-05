@@ -67,7 +67,8 @@
                             <a asp-controller="AppUserProduct" asp-action="Update" asp-route-appUserId="@review.AppUserId" asp-route-productId="@review.ProductId"
                                class="btn btn-sm btn-outline-warning me-2">Edit</a>
                             <a asp-controller="AppUserProduct" asp-action="Delete" asp-route-appUserId="@review.AppUserId" asp-route-productId="@review.ProductId"
-                               class="btn btn-sm btn-outline-danger">Delete</a>
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to delete this comment?');">Delete</a>
                         </div>
                     }
                 </div>
@@ -92,4 +93,3 @@
         white-space: pre-wrap;
     }
 </style>
- 

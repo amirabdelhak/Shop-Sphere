@@ -129,7 +129,6 @@
             navLinks.forEach(link => {
                 const linkHref = link.getAttribute("href");
 
-                // تجاهل الروابط الفارغة أو اللي بتبدأ بـ #
                 if (!linkHref || linkHref.startsWith("#")) return;
 
                 const linkPath = new URL(link.href).pathname.toLowerCase();

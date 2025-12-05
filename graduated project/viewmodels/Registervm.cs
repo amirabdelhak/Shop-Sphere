@@ -14,7 +14,6 @@ namespace graduated_project.viewmodels
         public string? username { get; set; }
         [Required(ErrorMessage = "the password is required")]
         [DataType(DataType.Password)]
-        [RegularExpression(@"^Amir.*", ErrorMessage = "The password must start with the word 'Amir'.")]
         public string? password { get; set; }
         [Required]
         [DataType(DataType.Password)]

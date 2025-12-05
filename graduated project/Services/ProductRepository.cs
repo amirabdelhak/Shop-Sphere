@@ -50,7 +50,6 @@ namespace graduated_project.Services
             pdc.Quantity = product.Quantity;
             pdc.Pricebeforediscount = product.Pricebeforediscount;
             pdc.Discount = product.Discount;
-            pdc.Priceafterdiscount = product.Priceafterdiscount;
             pdc.CategoryId = product.CategoryId;
                     
             context.SaveChanges();       

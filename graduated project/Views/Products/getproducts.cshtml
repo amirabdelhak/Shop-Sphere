@@ -36,12 +36,25 @@
                         </p>
 
                         <p class="card-text text-success fw-bold">
-                            Price After Discount: @(product.Priceafterdiscount - (product.Pricebeforediscount * product.Discount / 100)) EGP
+                            Price After Discount: @product.Priceafterdiscount.ToString("N2") EGP
                         </p>
 
                         <p class="card-text text-primary fw-semibold">
                             Discount: @product.Discount%
                         </p>
+
+                        @if (product.Quantity > 0)
+                        {
+                            <p class="card-text">
+                                <span class="badge bg-info">@product.Quantity available</span>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="card-text">
+                                <span class="badge bg-danger">Out of Stock</span>
+                            </p>
+                        }
 
                         <div class="mt-auto">
                             <a asp-action="getproduct" asp-route-productid="@product.Id" class="btn btn-outline-primary w-100 mb-2">
@@ -49,7 +62,7 @@
                             </a>
 
                             <!-- Add to Cart Form -->
-                        @if (User.Identity.IsAuthenticated)
+                        @if (User.Identity.IsAuthenticated && product.Quantity > 0)
                         {
                                     <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mb-2">
                                         <input type="hidden" name="productId" value="@product.Id" />
@@ -57,6 +70,12 @@
                                             Add to Cart
                                         </button>
                                     </form>
+                        }
+                        else if (User.Identity.IsAuthenticated && product.Quantity == 0)
+                        {
+                                    <button class="btn btn-secondary w-100 mb-2" disabled>
+                                        Out of Stock
+                                    </button>
                         }
 
                         @if (User.IsInRole("admin") || User.IsInRole("super admin"))

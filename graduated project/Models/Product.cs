@@ -19,8 +19,19 @@ namespace graduated_project.Models
         public IFormFile? Image { get; set; }
         public string? ImageName {  get; set; }
         public decimal? Discount { get; set; }
-        public decimal Priceafterdiscount { get; set; }
-
+        
+        [NotMapped]
+        public decimal Priceafterdiscount
+        {
+            get
+            {
+                if (Discount.HasValue && Discount > 0)
+                {
+                    return Pricebeforediscount - (Pricebeforediscount * (Discount.Value / 100));
+                }
+                return Pricebeforediscount;
+            }
+        }
 
         [ForeignKey("Category")]
         public int CategoryId { get; set; }

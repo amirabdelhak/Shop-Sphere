@@ -2,15 +2,29 @@
 
 <h2>Your Cart</h2>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">@TempData["Warning"]</div>
+}
+
 @if (!Model.Any())
 {
     <p>Your cart is empty.</p>
 }
 else
 {
+    var cartQuantities = ViewBag.CartQuantities as Dictionary<int, int> ?? new Dictionary<int, int>();
+    
     <div class="cart-container">
         @foreach (var product in Model)
         {
+            var qty = cartQuantities.GetValueOrDefault(product.Id, 1);
+            var itemTotal = product.Priceafterdiscount * qty;
+            
             <div class="cart-item">
                 <div class="cart-image">
                     <img src="~/image/@product.ImageName" alt="@product.Name" />
@@ -18,6 +32,19 @@ else
                 <div class="cart-details">
                     <h5>@product.Name</h5>
                     <p>Price: @product.Priceafterdiscount EGP</p>
+                    <p class="text-muted">Available: @product.Quantity in stock</p>
+                </div>
+                <div class="cart-quantity">
+                    <form asp-action="UpdateQuantity" asp-controller="Cart" method="post" class="quantity-form">
+                        <input type="hidden" name="productId" value="@product.Id" />
+                        <div class="quantity-controls">
+                            <button type="submit" name="quantity" value="@(qty - 1)" class="btn btn-outline-secondary btn-sm">−</button>
+                            <span class="quantity-value">@qty</span>
+                            <button type="submit" name="quantity" value="@(qty + 1)" class="btn btn-outline-secondary btn-sm" 
+                                    @(qty >= product.Quantity ? "disabled" : "")>+</button>
+                        </div>
+                    </form>
+                    <p class="item-total">@itemTotal.ToString("N2") EGP</p>
                 </div>
                 <div class="cart-actions">
                     <a href="@Url.Action("getproduct", "Products", new { productid = product.Id })" class="btn btn-primary btn-sm">
@@ -34,7 +61,7 @@ else
         }
 
         <div class="cart-summary">
-            <h4>Total: @Model.Sum(p => p.Priceafterdiscount) EGP</h4>
+            <h4>Total: @(((decimal)ViewBag.TotalPrice).ToString("N2")) EGP</h4>
 
             <div class="summary-buttons">
                 <form asp-action="EmptyCart" asp-controller="Cart" method="post" style="display:inline;">
@@ -78,16 +105,42 @@ else
         margin-left: 20px;
     }
 
+    .cart-quantity {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 20px;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quantity-value {
+        font-size: 1.2em;
+        font-weight: bold;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .item-total {
+        margin-top: 5px;
+        font-weight: bold;
+        color: #28a745;
+    }
+
     .cart-actions {
         display: flex;
         flex-direction: column;
         gap: 5px;
     }
 
-        .cart-actions a,
-        .cart-actions button {
-            width: 120px;
-        }
+    .cart-actions a,
+    .cart-actions button {
+        width: 120px;
+    }
 
     .cart-summary {
         margin-top: 30px;

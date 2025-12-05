@@ -14,7 +14,7 @@ namespace graduated_project.Models
         [ForeignKey("User")]
         public string? UserId { get; set; }
         public virtual AppUser? User { get; set; }
-        public virtual ICollection<ProductOrder>?  ProductOrders { get; set; }
+        public virtual ICollection<ProductOrder>?  ProductOrders { get; set; } = new List<ProductOrder>();
 
     }
     

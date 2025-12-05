@@ -71,6 +71,11 @@
                         @if (User.IsInRole("super admin"))
                         {
                             <li class="nav-item">
+                                <a class="nav-link text-white" asp-controller="Category" asp-action="Add">
+                                    <i class="bi bi-shield-lock-fill"></i> Add Category
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-white" asp-controller="Account" asp-action="adminRegister">
                                     <i class="bi bi-person-plus-fill"></i> Register Admin
                                 </a>
@@ -85,6 +90,7 @@
                                     <i class="bi bi-shield-lock-fill"></i> Add Role
                                 </a>
                             </li>
+
                         }
 
                         <li class="nav-item">

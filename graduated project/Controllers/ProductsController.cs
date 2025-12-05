@@ -3,6 +3,8 @@ using graduated_project.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace graduated_project.Controllers
 {
@@ -12,11 +14,13 @@ namespace graduated_project.Controllers
 
         IWebHostEnvironment _webHostEnvironment;
         private readonly IProductRepository productRepository;
+        private readonly ILogger<ProductsController> _logger;
 
-        public ProductsController(IWebHostEnvironment webHostEnvironment, IProductRepository productRepository)
+        public ProductsController(IWebHostEnvironment webHostEnvironment, IProductRepository productRepository, ILogger<ProductsController> logger)
         {
             _webHostEnvironment = webHostEnvironment;
             this.productRepository = productRepository;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -37,20 +41,46 @@ namespace graduated_project.Controllers
             {
                 if (product.Image != null)
                 {
-                    string wwwRootPath = _webHostEnvironment.WebRootPath;
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(product.Image.FileName);
-                    string path = Path.Combine(wwwRootPath, "image", fileName);
-                    using (var fileStream = new FileStream(path, FileMode.Create))
+                    try
                     {
-                        await product.Image.CopyToAsync(fileStream);
-                    }
+                        string wwwRootPath = _webHostEnvironment.WebRootPath;
+                        string imagesFolder = Path.Combine(wwwRootPath, "image");
 
-                    product.ImageName = fileName;
+                        // Ensure the images folder exists (helps avoid DirectoryNotFoundException)
+                        if (!Directory.Exists(imagesFolder))
+                        {
+                            Directory.CreateDirectory(imagesFolder);
+                        }
+
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(product.Image.FileName);
+                        string path = Path.Combine(imagesFolder, fileName);
+
+                        using (var fileStream = new FileStream(path, FileMode.Create))
+                        {
+                            await product.Image.CopyToAsync(fileStream);
+                        }
+
+                        product.ImageName = fileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error and show friendly message to the user
+                        _logger.LogError(ex, "Error saving uploaded image for product {ProductName}", product.Name);
+                        ModelState.AddModelError(string.Empty, "Unable to save the uploaded image. Please check folder permissions on the server.");
+                        return View(product);
+                    }
                 }
 
-
-                productRepository.Addproduct(product);
-                
+                try
+                {
+                    productRepository.Addproduct(product);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error adding product {ProductName}", product.Name);
+                    ModelState.AddModelError(string.Empty, "An error occurred while saving the product. Please try again later.");
+                    return View(product);
+                }
 
                 return RedirectToAction(nameof(Getproducts));
             }
